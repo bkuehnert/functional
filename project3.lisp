@@ -2,24 +2,24 @@
 
 ;;;List Functions
 
-(defun mappend (a b)
+(defun append (a b)
   (if (null a)
 	b
-	(cons (car a) (mappend (cdr a) b))))
+	(cons (car a) (append (cdr a) b))))
 
-(defun mreverse (a)
+(defun reverse (a)
   (if (null a)
 	'()
-	(mappend (mreverse (cdr a)) (list (car a)))))
+	(append (reverse (cdr a)) (list (car a)))))
 
-(defun mmap (f l)
+(defun map (f l)
   (if (null l) '()
-	(mappend (list (funcall f (car l))) (mmap f (cdr l)))))
+	(append (list (funcall f (car l))) (map f (cdr l)))))
 
 (defun nub (l)
   (cond 
 	((null l) '())
-	((mmember (car l) (cdr l))
+	((member (car l) (cdr l))
 			  (nub (cdr l)))
 	(T (cons (car l) (nub (cdr l))))))
 
@@ -28,13 +28,32 @@
 	((null l) i)
 	(T(funcall f (fold i f (cdr l)) (car l)))))
 
+
 ;;;Set Functions
 
-(defun mmember (x s)
+(defun member (x s)
   (cond
 	((null s) nil)
 	((= (car s) x) t)
-	(t (mmember x (cdr s)))))
+	(t (member x (cdr s)))))
+
+(defun insert (x s)
+  (cond
+	((member x s) s)
+	(T (cons x s))))
+
+(defun intersection (a b)
+  (cond
+	((null a) nil)
+	((null b) nil)
+	((member (car a) b) (cons (car a) (intersection (cdr a) b)))
+	(T (intersection (cdr a) b))))
+
+(defun union (a b)
+  (cond 
+	((and (null a) (null b)) nil)
+	((null a) b)
+	(T (nub (cons (car a) (union (cdr a) b))))))
 
 ;;;Math Functions
 
@@ -43,7 +62,7 @@
 	1 
 	(* n (factorial (- n 1)))))
 
-(defun mabs (n)
+(defun abs (n)
   (if (<= 0 n)
 	n
 	(* -1 n)))
@@ -54,40 +73,43 @@
 (defun square (x)
   (* x x))
 
-(defun mlcm (a b)
+(defun lcm (a b)
   (lcm_help a b 1))
 
 (defun lcm_help (a b x)
-  (if (and (= 0 (mmod x a)) (= 0 (mmod x b)))
+  (if (and (= 0 (mod x a)) (= 0 (mod x b)))
   x
   (lcm_help a b (+ x 1))
   ))
 
-(defun mmod (a b)
+(defun mod (a b)
   (if (or (= 0 a) (= 0 b))
 	0
   	(if (< a b)
 		a
-		(mmod (- a b) b))))
+		(mod (- a b) b))))
 
-(defun mgcd (a b)
+(defun gcd (a b)
   (if (= 0 b)
 	a
-	(mgcd b (mmod a b))))
+	(gcd b (mod a b))))
 
-(defun primep (n)
-  (if (= n 2)
-	(= 0 0)
-  	(relprimep n (- n 1))))
+;return a list of factors. 
+(defun factor (x n l)
+  (cond
+	((= x n) l)
+	((= (mod x n) 0) (factor x (+ n 1) (cons n l)))
+	((/= (mod x n) 0) (factor x (+ n 1) l))
+	(t l)))
 
-(defun relprimep (n d)
-  (if (= d 1)
-	(= 1 1)
-	(if (mmod n d)
-	  (= 0 1)
-	  (relprimep n (- d 1)))))
 
 ;;;Required Functions
 
-(defun perfectp (n)
-  (= n ()))
+(defun perfectp (x)
+  (= x (fold 0 '+ (factor x 1 nil))))
+
+(defun abundantp (x)
+  (< x (fold 0 '+ (factor x 1 nil))))
+
+(defun deficientp (x)
+  (> x (fold 0 '+ (factor x 1 nil))))
